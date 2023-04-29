@@ -1,8 +1,14 @@
 const csv = require("csv-parser");
 const fs = require("fs");
+const path = require("path");
+
+const settings = {
+  readerFile: path.join(__dirname, `airports.csv`),
+  writerFile: path.join(__dirname, `airports.csv`),
+};
 
 const writeToFile = (data) => {
-  fs.writeFile(__dirname + "/airlines.csv", data, (err) => {
+  fs.writeFile(settings.readerFile, data, (err) => {
     if (err) console.log(err);
     else {
       console.log("all done successfully");
@@ -11,24 +17,34 @@ const writeToFile = (data) => {
 };
 
 function convertToCSV(objArray) {
-  const header = Object.keys(objArray[0]).join(",");
-  const rows = objArray.map((obj) => Object.values(obj).join(","));
+  const header = Object.keys(objArray[0])
+    .map((val) => `"${val}"`)
+    .join(",");
+  const rows = objArray.map((obj) =>
+    Object.values(obj)
+      .map((val) => `"${val}"`)
+      .join(",")
+  );
   const text = `${header}\n${rows.join("\n")}`;
   writeToFile(text);
 }
 
 const results = [];
 
-fs.createReadStream(__dirname + "/airlines.csv")
+fs.createReadStream(settings.readerFile)
   .pipe(csv())
   .on("data", (data) => {
-    if (data.iata_code.length === 2)
+    if (data.iata_code.length === 3)
       results.push({
-        airline_name: data.airline_name,
+        airport_name: data.airport_name,
+        city: data.city,
+        country: data.country,
         iata_code: data.iata_code,
         icao_code: data.icao_code,
-        callsign: data.callsign,
-        country: data.country,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        altitude: data.altitude,
+        timezone: data.timezone,
       });
   })
   .on("end", () => {
